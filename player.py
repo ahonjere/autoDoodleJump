@@ -1,14 +1,15 @@
 from json.encoder import INFINITY
 import numpy as np
 import time
+from pynput.keyboard import Key, Controller
 
 # How many pixels under the characters top left corner
 # the closest platform below has to be
-PIX_BELOW_CHAR = 200
+PIX_BELOW_CHAR = 200*0.25
 class Player:
     def __init__(self):
         # (x,y,time)
-
+        self.keyboard_ = Controller()
         self.loc_ = np.array([0,0,0])
         self.prevLoc_ = np.array([0,0,0])
         self.speed_ = np.array([0,0,0])
@@ -47,4 +48,19 @@ class Player:
                 min = dist
                 min_idx = i
         return min_idx
- 
+
+
+    def move(self, closestBelow):
+        diffX = self.loc_[0] - closestBelow[0]
+        print("diffX: {}".format(diffX))
+        
+        if(diffX < 20*0.25):
+            self.keyboard_.press(Key.right)
+
+        elif diffX > 200*0.25:
+            self.keyboard_.press(Key.left)
+        else:
+            self.keyboard_.release(Key.right)
+            self.keyboard_.release(Key.left)
+
+    

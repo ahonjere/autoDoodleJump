@@ -1,5 +1,5 @@
 from platform import platform
-import pyautogui as auto
+import pyautogui
 import time
 import cv2
 import numpy as np
@@ -13,9 +13,11 @@ PLAY_BUTTON_TEMPL = r".\templates\play_button.png"
 CHAR_TEMPL = r".\templates\character.png"
 PLATFORM_TEMPL = r".\templates\platform.png"
 
+SCALEFACTOR = 0.25
 CHAR_TEMPL = cv2.imread(CHAR_TEMPL)
+CHAR_TEMPL = cv2.resize(CHAR_TEMPL, None, fx=SCALEFACTOR, fy=SCALEFACTOR)
 PLATFORM_TEMPL = cv2.imread(PLATFORM_TEMPL)
-
+PLATFORM_TEMPL = cv2.resize(PLATFORM_TEMPL, None, fx=SCALEFACTOR, fy=SCALEFACTOR)
 
 # Draw captured game with recognized objects for debug purposes
 def draw_game(gameFrame, charLoc, platformLocs):
@@ -48,13 +50,13 @@ def update_locations(gameFrame):
 
 
 def start_game():
-    play_button = auto.locateOnScreen(PLAY_BUTTON_TEMPL)
+    play_button = pyautogui.locateOnScreen(PLAY_BUTTON_TEMPL)
     print(play_button)
     if play_button:
-        auto.click(play_button)
+        pyautogui.click(play_button)
     print("Game Started!")
 
-
+ 
 
 def main():
     char = player.Player()
@@ -62,9 +64,14 @@ def main():
         start = time.time_ns()
         gameFrameBGR = np.array(ImageGrab.grab(bbox=GAMEWINDOW))
         gameFrame = cv2.cvtColor(gameFrameBGR, cv2.COLOR_BGR2RGB)
+        gameFrame = cv2.resize(gameFrame, None, fx=SCALEFACTOR, fy=SCALEFACTOR)
+       
+        #print("FrameGrab: {} ms".format((tok-start)/1000000))
         charLoc, platformLocs = update_locations(gameFrame)
-        stop_locations = time.time_ns()
 
+        
+        stop_locations = time.time_ns()
+        
         # As locating stuff takes the most time, lets use the time 
         # it takes as an estimation of dt
         # Maybe not needed
@@ -76,11 +83,13 @@ def main():
         
         char.updateLocation(charLoc)#, est_time_ms/1000)
         if len(platformLocs[0]) != 0:
-            closest = char.calcClosestBelow(platformLocs)
-            
-            draw_game(gameFrame, charLoc, np.array(platformLocs[:,closest]))
+            closestIdx = char.calcClosestBelow(platformLocs)
+            closest = np.array(platformLocs[:,closestIdx])
+            char.move(closest)
+            draw_game(gameFrame, charLoc, closest)
         
         stop_loop = time.time_ns()
+        print("Time for one iteration: {} ms".format((stop_loop-start)/1000000))
         
 
 main()
