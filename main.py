@@ -76,7 +76,7 @@ def main():
         
         char.updateLocation(charLoc)#, est_time_ms/1000)
         if len(platformLocs[0]) != 0:
-            closest = char.calcClosest(platformLocs)
+            closest = char.calcClosestBelow(platformLocs)
             
             draw_game(gameFrame, charLoc, np.array(platformLocs[:,closest]))
         
