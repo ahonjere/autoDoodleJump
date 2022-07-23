@@ -1,7 +1,9 @@
+from platform import platform
 import pyautogui as auto
 import time
 import cv2
 import numpy as np
+import player
 from PIL import ImageGrab
 from matplotlib import pyplot as plt
 
@@ -18,10 +20,11 @@ PLATFORM_TEMPL = cv2.imread(PLATFORM_TEMPL)
 # Draw captured game with recognized objects for debug purposes
 def draw_game(gameFrame, charLoc, platformLocs):
     bottom_right = (charLoc[0] + CHAR_TEMPL.shape[0], charLoc[1] + CHAR_TEMPL.shape[1])
+    
     cv2.rectangle(gameFrame,charLoc, bottom_right, 255, 2)
-
-    for pt in zip(*platformLocs[::-1]):
-        cv2.rectangle(gameFrame, pt, (pt[0] + PLATFORM_TEMPL.shape[1], pt[1] + PLATFORM_TEMPL.shape[0]), (0,0,255), 2)
+    cv2.rectangle(gameFrame, platformLocs[::-1], (platformLocs[1] + PLATFORM_TEMPL.shape[1], platformLocs[0] + PLATFORM_TEMPL.shape[0]), (0,0,255), 2)
+    #for pt in zip(*platformLocs[::-1]):
+    #    cv2.rectangle(gameFrame, pt, (pt[0] + PLATFORM_TEMPL.shape[1], pt[1] + PLATFORM_TEMPL.shape[0]), (0,0,255), 2)
 
     #gameFrame = cv2.cvtColor(gameFrame, cv2.COLOR_BGR2RGB)
     cv2.imshow("test", gameFrame)
@@ -35,9 +38,11 @@ def update_locations(gameFrame):
     
     # Get min and max matches
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res_char)
+    
     # TM_SQDIFF_NORMED => best match is the minimum
     loc_char = min_loc
-    loc_platform = np.where(res_platform <= 0.05)
+    loc_platform = np.array(np.where(res_platform <= 0.05))
+    
 
     return loc_char, loc_platform
 
@@ -50,15 +55,33 @@ def start_game():
     print("Game Started!")
 
 
+
 def main():
+    char = player.Player()
     while True:
         start = time.time_ns()
         gameFrameBGR = np.array(ImageGrab.grab(bbox=GAMEWINDOW))
         gameFrame = cv2.cvtColor(gameFrameBGR, cv2.COLOR_BGR2RGB)
         charLoc, platformLocs = update_locations(gameFrame)
-        draw_game(gameFrame, charLoc, platformLocs)
-        stop = time.time_ns()
-        print("Time elapsed for one loop: {} ms".format((stop-start)/1000000))
+        stop_locations = time.time_ns()
+
+        # As locating stuff takes the most time, lets use the time 
+        # it takes as an estimation of dt
+        # Maybe not needed
+        est_time_ms = (stop_locations - start)/1000000000
+
+        #draw_game(gameFrame, charLoc, platformLocs)
+        
+        charLoc = np.array(charLoc)
+        
+        char.updateLocation(charLoc)#, est_time_ms/1000)
+        if len(platformLocs[0]) != 0:
+            closest = char.calcClosest(platformLocs)
+            
+            draw_game(gameFrame, charLoc, np.array(platformLocs[:,closest]))
+        
+        stop_loop = time.time_ns()
+        
 
 main()
 
