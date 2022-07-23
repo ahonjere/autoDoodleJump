@@ -10,18 +10,22 @@ GAMEWINDOW = (660,107,1260,1000)
 PLAY_BUTTON_TEMPL = r".\templates\play_button.png"
 CHAR_TEMPL = r".\templates\character.png"
 PLATFORM_TEMPL = r".\templates\platform.png"
+
 CHAR_TEMPL = cv2.imread(CHAR_TEMPL)
-CHAR_TEMPL = CHAR_TEMPL[...,::-1]
 PLATFORM_TEMPL = cv2.imread(PLATFORM_TEMPL)
-PLATFORM_TEMPL = PLATFORM_TEMPL[...,::-1]
 
 
-def start_game():
-    play_button = auto.locateOnScreen(PLAY_BUTTON_TEMPL)
-    print(play_button)
-    if play_button:
-        auto.click(play_button)
-    print("Game Started!")
+# Draw captured game with recognized objects for debug purposes
+def draw_game(gameFrame, charLoc, platformLocs):
+    bottom_right = (charLoc[0] + CHAR_TEMPL.shape[0], charLoc[1] + CHAR_TEMPL.shape[1])
+    cv2.rectangle(gameFrame,charLoc, bottom_right, 255, 2)
+
+    for pt in zip(*platformLocs[::-1]):
+        cv2.rectangle(gameFrame, pt, (pt[0] + PLATFORM_TEMPL.shape[1], pt[1] + PLATFORM_TEMPL.shape[0]), (0,0,255), 2)
+
+    #gameFrame = cv2.cvtColor(gameFrame, cv2.COLOR_BGR2RGB)
+    cv2.imshow("test", gameFrame)
+    cv2.waitKey(1)
 
 
 # Updates object locations. Gives top left corner.
@@ -38,20 +42,19 @@ def update_locations(gameFrame):
     return min_loc, loc_platform
 
 
-# Draw captured game with recognized objects for debug purposes
-def draw_game(gameFrame, charLoc, platformLocs):
-    bottom_right = (charLoc[0] + CHAR_TEMPL.shape[0], charLoc[1] + CHAR_TEMPL.shape[1])
-    cv2.rectangle(gameFrame,charLoc, bottom_right, 255, 2)
-    for pt in zip(*platformLocs[::-1]):
-        cv2.rectangle(gameFrame, pt, (pt[0] + PLATFORM_TEMPL.shape[1], pt[1] + PLATFORM_TEMPL.shape[0]), (0,0,255), 2)
-    cv2.imshow("test", gameFrame)
-    cv2.waitKey(1)
-    
+def start_game():
+    play_button = auto.locateOnScreen(PLAY_BUTTON_TEMPL)
+    print(play_button)
+    if play_button:
+        auto.click(play_button)
+    print("Game Started!")
+
 
 def main():
     while True:
         start = time.time_ns()
-        gameFrame = np.array(ImageGrab.grab(bbox=GAMEWINDOW))
+        gameFrameBGR = np.array(ImageGrab.grab(bbox=GAMEWINDOW))
+        gameFrame = cv2.cvtColor(gameFrameBGR, cv2.COLOR_BGR2RGB)
         charLoc, platformLocs = update_locations(gameFrame)
         draw_game(gameFrame, charLoc, platformLocs)
         stop = time.time_ns()
