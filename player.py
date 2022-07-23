@@ -2,6 +2,9 @@ from json.encoder import INFINITY
 import numpy as np
 import time
 
+# How many pixels under the characters top left corner
+# the closest platform below has to be
+PIX_BELOW_CHAR = 200
 class Player:
     def __init__(self):
         # (x,y,time)
@@ -11,6 +14,7 @@ class Player:
         self.speed_ = np.array([0,0,0])
         self.prevSpeed_  = np.array([0,0,0])
         self.accel_ = np.array([0,0,0])
+
 
     def updateLocation(self, loc):
         curr_time_s = time.time_ns()/1000000000
@@ -27,24 +31,20 @@ class Player:
     def getLocation(self):
         return self.loc_[0:1]
     
+
     def getSpeed(self):
         return self.speed_[0:1]
 
-    def calcClosest(self, platformLocs):
+
+    def calcClosestBelow(self, platformLocs):
         distance = platformLocs[0] - np.repeat(self.loc_[1], len(platformLocs[1]))
         i = -1 
         min = 99999
         min_idx = 0
         for dist in distance:
             i += 1
-            if(dist < min and dist > 200):
+            if(dist < min and dist > PIX_BELOW_CHAR):
                 min = dist
                 min_idx = i
-        print(min)
-        print(min_idx)
-            
-        #print(platformLocs)
-        #print(self.loc_[1])
-        
         return min_idx
  
