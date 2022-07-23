@@ -4,6 +4,7 @@ import time
 import cv2
 import numpy as np
 import player
+import dxcam
 from PIL import ImageGrab
 from matplotlib import pyplot as plt
 
@@ -13,7 +14,7 @@ PLAY_BUTTON_TEMPL = r".\templates\play_button.png"
 CHAR_TEMPL = r".\templates\character.png"
 PLATFORM_TEMPL = r".\templates\platform.png"
 
-SCALEFACTOR = 0.25
+SCALEFACTOR = 0.5
 CHAR_TEMPL = cv2.imread(CHAR_TEMPL)
 CHAR_TEMPL = cv2.resize(CHAR_TEMPL, None, fx=SCALEFACTOR, fy=SCALEFACTOR)
 PLATFORM_TEMPL = cv2.imread(PLATFORM_TEMPL)
@@ -60,36 +61,40 @@ def start_game():
 
 def main():
     char = player.Player()
+    camera = dxcam.create()
     while True:
         start = time.time_ns()
-        gameFrameBGR = np.array(ImageGrab.grab(bbox=GAMEWINDOW))
-        gameFrame = cv2.cvtColor(gameFrameBGR, cv2.COLOR_BGR2RGB)
-        gameFrame = cv2.resize(gameFrame, None, fx=SCALEFACTOR, fy=SCALEFACTOR)
-       
-        #print("FrameGrab: {} ms".format((tok-start)/1000000))
-        charLoc, platformLocs = update_locations(gameFrame)
+        gameFrame = camera.grab(region=GAMEWINDOW)
+        if(gameFrame is None):
+            continue
+        else:
+            gameFrame = cv2.cvtColor(gameFrame, cv2.COLOR_BGR2RGB)
+            gameFrame = cv2.resize(gameFrame, None, fx=SCALEFACTOR, fy=SCALEFACTOR)
+        
+            #print("FrameGrab: {} ms".format((tok-start)/1000000))
+            charLoc, platformLocs = update_locations(gameFrame)
 
-        
-        stop_locations = time.time_ns()
-        
-        # As locating stuff takes the most time, lets use the time 
-        # it takes as an estimation of dt
-        # Maybe not needed
-        est_time_ms = (stop_locations - start)/1000000000
+            
+            stop_locations = time.time_ns()
+            
+            # As locating stuff takes the most time, lets use the time 
+            # it takes as an estimation of dt
+            # Maybe not needed
+            est_time_ms = (stop_locations - start)/1000000000
 
-        #draw_game(gameFrame, charLoc, platformLocs)
-        
-        charLoc = np.array(charLoc)
-        
-        char.updateLocation(charLoc)#, est_time_ms/1000)
-        if len(platformLocs[0]) != 0:
-            closestIdx = char.calcClosestBelow(platformLocs)
-            closest = np.array(platformLocs[:,closestIdx])
-            char.move(closest)
-            draw_game(gameFrame, charLoc, closest)
-        
-        stop_loop = time.time_ns()
-        print("Time for one iteration: {} ms".format((stop_loop-start)/1000000))
+            #draw_game(gameFrame, charLoc, platformLocs)
+            
+            charLoc = np.array(charLoc)
+            
+            char.updateLocation(charLoc)#, est_time_ms/1000)
+            if len(platformLocs[0]) != 0:
+                closestIdx = char.calcClosestBelow(platformLocs)
+                closest = np.array(platformLocs[:,closestIdx])
+                char.move(closest)
+                draw_game(gameFrame, charLoc, closest)
+            
+            stop_loop = time.time_ns()
+            print("Time for one iteration: {} ms".format((stop_loop-start)/1000000))
         
 
 main()
