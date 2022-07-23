@@ -24,17 +24,21 @@ def start_game():
     print("Game Started!")
 
 
-# Updates object locations
+# Updates object locations. Gives top left corner.
 def update_locations(gameFrame):
+    res_char = cv2.matchTemplate(gameFrame, CHAR_TEMPL, cv2.TM_SQDIFF_NORMED)
+    res_platform = cv2.matchTemplate(gameFrame, PLATFORM_TEMPL, cv2.TM_SQDIFF_NORMED)
     
-    res = cv2.matchTemplate(gameFrame, CHAR_TEMPL, cv2.TM_SQDIFF_NORMED)
-    res2 = cv2.matchTemplate(gameFrame, PLATFORM_TEMPL, cv2.TM_SQDIFF_NORMED)
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-    loc_platform = np.where(res2 <= 0.15)
+    # Get min and max matches
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res_char)
+    # TM_SQDIFF_NORMED => best match is the minimum
+    loc_char = min_loc
+    loc_platform = np.where(res_platform <= 0.15)
+
     return min_loc, loc_platform
 
 
-# Draw captured game with recognized objects
+# Draw captured game with recognized objects for debug purposes
 def draw_game(gameFrame, charLoc, platformLocs):
     bottom_right = (charLoc[0] + CHAR_TEMPL.shape[0], charLoc[1] + CHAR_TEMPL.shape[1])
     cv2.rectangle(gameFrame,charLoc, bottom_right, 255, 2)
