@@ -37,9 +37,9 @@ def update_locations(gameFrame):
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res_char)
     # TM_SQDIFF_NORMED => best match is the minimum
     loc_char = min_loc
-    loc_platform = np.where(res_platform <= 0.15)
+    loc_platform = np.where(res_platform <= 0.05)
 
-    return min_loc, loc_platform
+    return loc_char, loc_platform
 
 
 def start_game():
