@@ -4,10 +4,12 @@ import time
 import random
 from pynput import mouse, keyboard
 from matplotlib import pyplot as plt
+
 # How many pixels under the characters top left corner
 # the closest platform below has to be
 PIX_BELOW_CHAR = 200*0.25
-GRAVITY = 150
+GRAVITY = 400
+
 class Player:
     def __init__(self):
         # (x,y,time)
@@ -79,7 +81,7 @@ class Player:
         if(diffX < -20*0.25):
             self.keyboard_.press(keyboard.Key.right)
 
-        elif diffX > -200*0.25:
+        elif diffX > 300*0.25:
             self.keyboard_.press(keyboard.Key.left)
         else:
             self.keyboard_.release(keyboard.Key.right)
