@@ -6,23 +6,32 @@ from matplotlib import pyplot as plt
 # How many pixels under the characters top left corner
 # the closest platform below has to be
 PIX_BELOW_CHAR = 200*0.25
+GRAVITY = 150
 class Player:
     def __init__(self):
         # (x,y,time)
         self.keyboard_ = keyboard.Controller()
         self.mouse_ = mouse.Controller()
         self.loc_ = np.array([[0,0,0],[0,0,0],[0,0,0]])
-        print(self.loc_)
-        #self.prevLoc_ = np.array([0,0,0])
+
         self.speed_ = np.array([0,0,0])
         self.prevSpeed_  = np.array([0,0,0])
         self.accel_ = np.array([0,0,0])
-        
+        self.idx_ = 0
+        self.prev_time_s_ = 1
+        self.curr_time_s_ = 1.0001
 
+    def calculate_flight_path(self):
+        t = np.linspace(0,1,100)
+        x = self.loc_[0][0] + self.speed_[0]*t
+        y = (self.loc_[0][1] + (self.speed_[1] + GRAVITY*t)*t)
+        return(np.array([x,y]))
 
+    # Update new observation. Returns estimated flight path.
     def updateLocation(self, loc):
-        curr_time_s = time.time_ns()/1000000
-        #print(curr_time_s)
+        self.prev_time_s_ = self.curr_time_s_
+        self.curr_time_s_ = time.time_ns()/1000000000
+        print(self.curr_time_s_)
         self.loc_[2] = self.loc_[1]
         self.loc_[1] = self.loc_[0]
         
@@ -31,11 +40,18 @@ class Player:
         #self.loc_[0][2] = curr_time_s
         #print(self.loc_)
         self.prevSpeed_ = self.speed_
-        self.speed_ = np.hstack(((self.loc_[0][0:2]-self.loc_[1][0:2])/(self.loc_[0][2]-self.loc_[1][2]), curr_time_s))
+        self.speed_ = np.hstack(((self.loc_[0][0:2]-self.loc_[1][0:2])/(self.curr_time_s_-self.prev_time_s_), self.curr_time_s_))
         
         self.accel_ = np.hstack(((self.speed_[0:2] - self.prevSpeed_[0:2])/(self.speed_[2]-self.prevSpeed_[2])))
         
+        flightPath = self.calculate_flight_path()
 
+        return flightPath
+        
+       
+        
+
+        
 
     def getLocation(self):
         return self.loc_[0:1]

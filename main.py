@@ -86,15 +86,18 @@ def main():
             
             charLoc = np.array(charLoc)
             
-            char.updateLocation(charLoc)#, est_time_ms/1000)
+            flying_path = char.updateLocation(charLoc)#, est_time_ms/1000)
+            for point in zip(flying_path[0], flying_path[1]):
+                point = (int(point[0]),int(point[1]))
+                cv2.drawMarker(gameFrame, point, (255,0,0)) 
             if len(platformLocs[0]) != 0:
                 closestIdx = char.calcClosestBelow(platformLocs)
                 closest = np.array(platformLocs[:,closestIdx])
                 char.move(closest)
                 draw_game(gameFrame, charLoc, closest)
-            
+            #char.shoot([50,50])
             stop_loop = time.time_ns()
-            print("Time for one iteration: {} ms".format((stop_loop-start)/1000000))
+            #print("Time for one iteration: {} ms".format((stop_loop-start)/1000000))
         
 
 main()
