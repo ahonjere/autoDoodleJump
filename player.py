@@ -1,6 +1,7 @@
 from json.encoder import INFINITY
 import numpy as np
 import time
+import random
 from pynput import mouse, keyboard
 from matplotlib import pyplot as plt
 # How many pixels under the characters top left corner
@@ -20,6 +21,7 @@ class Player:
         self.idx_ = 0
         self.prev_time_s_ = 1
         self.curr_time_s_ = 1.0001
+        self.flightpath_ = np.array([])
 
     def calculate_flight_path(self):
         t = np.linspace(0,1,100)
@@ -31,7 +33,7 @@ class Player:
     def updateLocation(self, loc):
         self.prev_time_s_ = self.curr_time_s_
         self.curr_time_s_ = time.time_ns()/1000000000
-        print(self.curr_time_s_)
+        
         self.loc_[2] = self.loc_[1]
         self.loc_[1] = self.loc_[0]
         
@@ -44,13 +46,9 @@ class Player:
         
         self.accel_ = np.hstack(((self.speed_[0:2] - self.prevSpeed_[0:2])/(self.speed_[2]-self.prevSpeed_[2])))
         
-        flightPath = self.calculate_flight_path()
+        self.flightpath_ = self.calculate_flight_path()
 
-        return flightPath
-        
-       
-        
-
+        return self.flightpath_
         
 
     def getLocation(self):
@@ -92,5 +90,18 @@ class Player:
         #if (enemyFromChar[1] < -50):
         #    self.mouse_.move(np.array([660,107]) + enemy)
         #    self.mouse_.click(mouse.Button.left)
+
+    def calculate_highest_under_flightpath(self, platformLocs):
+        highestPointOnPathIdx = np.argmin(self.flightpath_[1,:])
+        highestPointOnPath = self.flightpath_[:,highestPointOnPathIdx]
+        reachable = []
+        highestReachable = (9999,9999)
+        for platform in zip(platformLocs[0], platformLocs[1]):
+            
+            if (platform[1] < highestPointOnPath[1]):
+                if(platform[1] < highestReachable[1]):
+                    highestReachable = platform
+        return highestReachable
+        
 
     

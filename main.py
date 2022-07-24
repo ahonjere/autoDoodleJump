@@ -93,7 +93,12 @@ def main():
             if len(platformLocs[0]) != 0:
                 closestIdx = char.calcClosestBelow(platformLocs)
                 closest = np.array(platformLocs[:,closestIdx])
-                char.move(closest)
+                highestReachable = char.calculate_highest_under_flightpath(platformLocs)
+                
+                if(highestReachable != (9999,9999)):
+                    cv2.rectangle(gameFrame, highestReachable[::-1], ((highestReachable[1] + PLATFORM_TEMPL.shape[1]), highestReachable[0] + PLATFORM_TEMPL.shape[0]), (0,255,0))
+                
+                char.move(highestReachable)
                 draw_game(gameFrame, charLoc, closest)
             #char.shoot([50,50])
             stop_loop = time.time_ns()
