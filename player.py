@@ -7,8 +7,8 @@ from matplotlib import pyplot as plt
 
 # How many pixels under the characters top left corner
 # the closest platform below has to be
-PIX_BELOW_CHAR = 200*0.25
-GRAVITY = 400
+PIX_BELOW_CHAR = 0*0.25
+GRAVITY = 500
 
 class Player:
     def __init__(self):
@@ -24,6 +24,7 @@ class Player:
         self.prev_time_s_ = 1
         self.curr_time_s_ = 1.0001
         self.flightpath_ = np.array([])
+        self.highestReachable_ = np.array([9999,9999])
 
     def calculate_flight_path(self):
         t = np.linspace(0,1,100)
@@ -74,16 +75,30 @@ class Player:
         return min_idx
 
 
-    def move(self, closestBelow):
-        diffX = self.loc_[0][0] - closestBelow[0]
+    def move(self, target):
+        smallestDist = 9999        
+        # Calc closest point in flight path
+        for point in zip(self.flightpath_[0], self.flightpath_[1]):
+            point = np.array(point)
+            target = np.array(target)
+            dist = np.linalg.norm(point - target[::-1])
+            if (dist < smallestDist):
+                closestPoint = point
         #print("diffX: {}".format(diffX))
         
+        diffX = self.loc_[0][0] - target[1]
+        
         if(diffX < -20*0.25):
+            print("Move right")
+            self.keyboard_.release(keyboard.Key.left)
             self.keyboard_.press(keyboard.Key.right)
 
-        elif diffX > 300*0.25:
+        elif diffX > 200*0.25:
+            print("Move left")
+            self.keyboard_.release(keyboard.Key.right)
             self.keyboard_.press(keyboard.Key.left)
         else:
+            print("Stop moving")
             self.keyboard_.release(keyboard.Key.right)
             self.keyboard_.release(keyboard.Key.left)
 
@@ -94,16 +109,20 @@ class Player:
         #    self.mouse_.click(mouse.Button.left)
 
     def calculate_highest_under_flightpath(self, platformLocs):
+        
         highestPointOnPathIdx = np.argmin(self.flightpath_[1,:])
         highestPointOnPath = self.flightpath_[:,highestPointOnPathIdx]
+        print(highestPointOnPath)
+        highestPointOnPath[1] += PIX_BELOW_CHAR # Add treshold to make sure it is reachable
         reachable = []
-        highestReachable = (9999,9999)
+        self.highestReachable_ = (9999,9999)
         for platform in zip(platformLocs[0], platformLocs[1]):
             
-            if (platform[1] < highestPointOnPath[1]):
-                if(platform[1] < highestReachable[1]):
-                    highestReachable = platform
-        return highestReachable
+            if (platform[0] > highestPointOnPath[1]):
+                if(platform[0] < self.highestReachable_[0]):
+                    self.highestReachable_ = platform
+                    
+        return self.highestReachable_
         
 
     

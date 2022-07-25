@@ -48,15 +48,6 @@ def update_locations(gameFrame):
     
 
     return loc_char, loc_platform
-
-
-def start_game():
-    play_button = pyautogui.locateOnScreen(PLAY_BUTTON_TEMPL)
-    print(play_button)
-    if play_button:
-        pyautogui.click(play_button)
-    print("Game Started!")
-
  
 
 def main():
@@ -97,11 +88,11 @@ def main():
                 closest = np.array(platformLocs[:,closestIdx])
                 highestReachable = char.calculate_highest_under_flightpath(platformLocs)
                 
-                if(highestReachable != (9999,9999)):
+                if(highestReachable[0] != 9999):
                     cv2.rectangle(gameFrame, highestReachable[::-1], ((highestReachable[1] + PLATFORM_TEMPL.shape[1]), highestReachable[0] + PLATFORM_TEMPL.shape[0]), (0,255,0))
                 
                 char.move(highestReachable)
-                draw_game(gameFrame, charLoc, closest)
+                draw_game(gameFrame, charLoc, highestReachable)
             #char.shoot([50,50])
             stop_loop = time.time_ns()
             #print("Time for one iteration: {} ms".format((stop_loop-start)/1000000))
