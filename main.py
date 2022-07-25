@@ -1,11 +1,11 @@
 from platform import platform
-import pyautogui
+
 import time
 import cv2
 import numpy as np
 import player
 import dxcam
-from PIL import ImageGrab
+
 from matplotlib import pyplot as plt
 
 # (x_left, y_top, x_right, y_bottom)
