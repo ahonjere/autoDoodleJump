@@ -50,52 +50,58 @@ def update_locations(gameFrame):
     
 
     return loc_char, loc_platform
- 
+
+
+def update(gameFrame, char, draw=True):
+    start = time.time_ns()
+    
+    #print("FrameGrab: {} ms".format((tok-start)/1000000))
+
+    charLoc, platformLocs = update_locations(gameFrame)
+    charLoc = np.array(charLoc)
+    flying_path = char.updateLocation(charLoc)
+
+    for point in zip(flying_path[0], flying_path[1]):
+        point = (int(point[0]),int(point[1]))
+        cv2.drawMarker(gameFrame, point, (255,0,0)) 
+
+        highestReachable = (9999, 9999)
+
+        if len(platformLocs[0]) != 0:
+            highestReachable = char.calculate_highest_under_flightpath(platformLocs)
+
+    if(highestReachable[0] != 9999):
+        cv2.rectangle(gameFrame, highestReachable[::-1], 
+                    ((highestReachable[1] + PLATFORM_TEMPL.shape[1]), 
+                    highestReachable[0] + PLATFORM_TEMPL.shape[0]), 
+                    (0,255,0))
+    
+        char.move(highestReachable)
+
+    if draw == True:
+        draw_game(gameFrame, charLoc, highestReachable)
+    
+    stop_loop = time.time_ns()
+    print("Time for one iteration: {} ms".format((stop_loop-start)/1000000))
+    
+
 
 def main():
-    
     char = player.Player()
     camera = dxcam.create()
+    print(camera)
 
     while True:
-        start = time.time_ns()
-
         gameFrame = camera.grab(region=GAMEWINDOW)
 
         if(gameFrame is None):
             continue
-        else:
-            gameFrame = cv2.cvtColor(gameFrame, cv2.COLOR_BGR2RGB)
-            gameFrame = cv2.resize(gameFrame, None, fx=SCALEFACTOR, fy=SCALEFACTOR)
-        
-            #print("FrameGrab: {} ms".format((tok-start)/1000000))
-            charLoc, platformLocs = update_locations(gameFrame)
-            
-            stop_locations = time.time_ns()
-            
-            #draw_game(gameFrame, charLoc, platformLocs)
-            
-            charLoc = np.array(charLoc)
-            
-            flying_path = char.updateLocation(charLoc)#, est_time_ms/1000)
-            
-            for point in zip(flying_path[0], flying_path[1]):
-                point = (int(point[0]),int(point[1]))
-                cv2.drawMarker(gameFrame, point, (255,0,0)) 
 
-            if len(platformLocs[0]) != 0:
-                closestIdx = char.calcClosestBelow(platformLocs)
-                closest = np.array(platformLocs[:,closestIdx])
-                highestReachable = char.calculate_highest_under_flightpath(platformLocs)
-                
-                if(highestReachable[0] != 9999):
-                    cv2.rectangle(gameFrame, highestReachable[::-1], ((highestReachable[1] + PLATFORM_TEMPL.shape[1]), highestReachable[0] + PLATFORM_TEMPL.shape[0]), (0,255,0))
-                
-                char.move(highestReachable)
-                draw_game(gameFrame, charLoc, highestReachable)
-            #char.shoot([50,50])
-            stop_loop = time.time_ns()
-            #print("Time for one iteration: {} ms".format((stop_loop-start)/1000000))
+        gameFrame = cv2.cvtColor(gameFrame, cv2.COLOR_BGR2RGB)
+        gameFrame = cv2.resize(gameFrame, None, fx=SCALEFACTOR, fy=SCALEFACTOR)
+        
+        update(gameFrame, char)
+        
         
 
 main()
