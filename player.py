@@ -61,6 +61,8 @@ class Player:
     def getSpeed(self):
         return self.speed_[0:1]
 
+    def getFlightPath(self):
+        return self.flightpath_
 
     def calcClosestBelow(self, platformLocs):
         distance = platformLocs[0] - np.repeat(self.loc_[0][1], len(platformLocs[1]))
@@ -112,7 +114,6 @@ class Player:
         
         highestPointOnPathIdx = np.argmin(self.flightpath_[1,:])
         highestPointOnPath = self.flightpath_[:,highestPointOnPathIdx]
-        print(highestPointOnPath)
         highestPointOnPath[1] += PIX_BELOW_CHAR # Add treshold to make sure it is reachable
         reachable = []
         self.highestReachable_ = (9999,9999)
