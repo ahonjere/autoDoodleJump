@@ -9,7 +9,9 @@ import dxcam
 from matplotlib import pyplot as plt
 
 # (x_left, y_top, x_right, y_bottom)
-GAMEWINDOW = (660,107,1260,1000)
+offset = -100
+GAMEWINDOW = (660+offset,107+offset,1260+offset,1000+offset)
+
 PLAY_BUTTON_TEMPL = r".\templates\play_button.png"
 CHAR_TEMPL = r".\templates\character.png"
 PLATFORM_TEMPL = r".\templates\platform.png"
@@ -51,11 +53,15 @@ def update_locations(gameFrame):
  
 
 def main():
+    
     char = player.Player()
     camera = dxcam.create()
+
     while True:
         start = time.time_ns()
+
         gameFrame = camera.grab(region=GAMEWINDOW)
+
         if(gameFrame is None):
             continue
         else:
@@ -64,15 +70,9 @@ def main():
         
             #print("FrameGrab: {} ms".format((tok-start)/1000000))
             charLoc, platformLocs = update_locations(gameFrame)
-
             
             stop_locations = time.time_ns()
             
-            # As locating stuff takes the most time, lets use the time 
-            # it takes as an estimation of dt
-            # Maybe not needed
-            est_time_ms = (stop_locations - start)/1000000000
-
             #draw_game(gameFrame, charLoc, platformLocs)
             
             charLoc = np.array(charLoc)
