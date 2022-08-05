@@ -8,9 +8,12 @@ import dxcam
 
 from matplotlib import pyplot as plt
 
+
+DOODLE_WINDOW_SIZE = (560/1920, 850/1080)
+CHROME_BANNER_SIZE = (1, 150/1080)
+
 # (x_left, y_top, x_right, y_bottom)
-offset = -100
-GAMEWINDOW = (660+offset,107+offset,1260+offset,1000+offset)
+
 
 PLAY_BUTTON_TEMPL = r".\templates\play_button.png"
 CHAR_TEMPL = r".\templates\character.png"
@@ -48,7 +51,6 @@ def update_locations(gameFrame):
     loc_char = min_loc
     loc_platform = np.array(np.where(res_platform <= 0.05))
     
-
     return loc_char, loc_platform
 
 
@@ -58,6 +60,7 @@ def update(gameFrame, char, draw=True):
     #print("FrameGrab: {} ms".format((tok-start)/1000000))
 
     charLoc, platformLocs = update_locations(gameFrame)
+
     charLoc = np.array(charLoc)
     flying_path = char.updateLocation(charLoc)
 
@@ -65,10 +68,11 @@ def update(gameFrame, char, draw=True):
         point = (int(point[0]),int(point[1]))
         cv2.drawMarker(gameFrame, point, (255,0,0)) 
 
-        highestReachable = (9999, 9999)
-
-        if len(platformLocs[0]) != 0:
-            highestReachable = char.calculate_highest_under_flightpath(platformLocs)
+    highestReachable = (9999, 9999)
+    
+    if len(platformLocs[0]) != 0:
+        highestReachable = char.calculate_highest_under_flightpath(platformLocs)
+        print(highestReachable)
 
     if(highestReachable[0] != 9999):
         cv2.rectangle(gameFrame, highestReachable[::-1], 
@@ -85,24 +89,27 @@ def update(gameFrame, char, draw=True):
     print("Time for one iteration: {} ms".format((stop_loop-start)/1000000))
     
 
-
 def main():
     char = player.Player()
     camera = dxcam.create()
-    print(camera)
+    screen_width = camera.width
+    screen_height = camera.height
 
+    gamewindow = (int((screen_width/2 - DOODLE_WINDOW_SIZE[0]/2*screen_width)), 
+                    int((screen_height/2 - DOODLE_WINDOW_SIZE[1]/2*screen_height)), 
+                    int((screen_width/2 + DOODLE_WINDOW_SIZE[0]/2*screen_width)), 
+                    int((screen_height/2 + DOODLE_WINDOW_SIZE[1]/2*screen_height)))
+    print(gamewindow)
     while True:
-        gameFrame = camera.grab(region=GAMEWINDOW)
+        gameFrame = camera.grab(region=gamewindow)
 
         if(gameFrame is None):
             continue
+        else:
+            gameFrame = cv2.cvtColor(gameFrame, cv2.COLOR_BGR2RGB)
+            gameFrame = cv2.resize(gameFrame, None, fx=SCALEFACTOR, fy=SCALEFACTOR)
+            update(gameFrame, char)
 
-        gameFrame = cv2.cvtColor(gameFrame, cv2.COLOR_BGR2RGB)
-        gameFrame = cv2.resize(gameFrame, None, fx=SCALEFACTOR, fy=SCALEFACTOR)
-        
-        update(gameFrame, char)
-        
-        
 
 main()
 
