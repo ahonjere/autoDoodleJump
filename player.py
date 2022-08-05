@@ -77,7 +77,7 @@ class Player:
         return min_idx
 
 
-    def move(self, target):
+    def move(self, target, tresholds):
         smallestDist = 9999        
         # Calc closest point in flight path
         for point in zip(self.flightpath_[0], self.flightpath_[1]):
@@ -90,12 +90,12 @@ class Player:
         
         diffX = self.loc_[0][0] - target[1]
         
-        if(diffX < -20*0.25):
+        if(diffX < tresholds[0]):
             print("Move right")
             self.keyboard_.release(keyboard.Key.left)
             self.keyboard_.press(keyboard.Key.right)
 
-        elif diffX > 200*0.25:
+        elif diffX > tresholds[1]:
             print("Move left")
             self.keyboard_.release(keyboard.Key.right)
             self.keyboard_.press(keyboard.Key.left)

@@ -20,6 +20,8 @@ CHAR_TEMPL = r".\templates\character.png"
 PLATFORM_TEMPL = r".\templates\platform.png"
 
 SCALEFACTOR = 0.5
+MOVING_TRESHOLDS = (20/1920*SCALEFACTOR, 100/1920*SCALEFACTOR)
+
 CHAR_TEMPL = cv2.imread(CHAR_TEMPL)
 CHAR_TEMPL = cv2.resize(CHAR_TEMPL, None, fx=SCALEFACTOR, fy=SCALEFACTOR)
 PLATFORM_TEMPL = cv2.imread(PLATFORM_TEMPL)
@@ -79,8 +81,14 @@ def update(gameFrame, char, draw=True):
                     ((highestReachable[1] + PLATFORM_TEMPL.shape[1]), 
                     highestReachable[0] + PLATFORM_TEMPL.shape[0]), 
                     (0,255,0))
+
+        print((highestReachable[1] + MOVING_TRESHOLDS[1]))
+        cv2.rectangle(gameFrame, highestReachable[::-1], 
+                    ((int(highestReachable[1] + MOVING_TRESHOLDS[1]*1920)), 
+                    highestReachable[0] + 50), 
+                    (255,0,0))
     
-        char.move(highestReachable)
+        char.move(highestReachable, MOVING_TRESHOLDS)
 
     if draw == True:
         draw_game(gameFrame, charLoc, highestReachable)
