@@ -1,4 +1,3 @@
-from json.encoder import INFINITY
 import numpy as np
 import time
 import random
@@ -7,7 +6,7 @@ from matplotlib import pyplot as plt
 
 # How many pixels under the characters top left corner
 # the closest platform below has to be
-PIX_BELOW_CHAR = 0*0.25
+PIX_BELOW_CHAR = 75*0.25
 GRAVITY = 500
 
 class Player:

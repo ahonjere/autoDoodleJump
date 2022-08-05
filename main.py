@@ -18,15 +18,18 @@ CHROME_BANNER_SIZE = (1, 150/1080)
 PLAY_BUTTON_TEMPL = r".\templates\play_button.png"
 CHAR_TEMPL = r".\templates\character.png"
 PLATFORM_TEMPL = r".\templates\platform.png"
+MOVING_PLATFORM_TEMPL = r".\templates\moving_platform.png"
 
 SCALEFACTOR = 0.5
-MOVING_TRESHOLDS = (20/1920*SCALEFACTOR, 100/1920*SCALEFACTOR)
+MOVING_TRESHOLDS = (0/1920*SCALEFACTOR, 200/1920*SCALEFACTOR)
 
 CHAR_TEMPL = cv2.imread(CHAR_TEMPL)
 CHAR_TEMPL = cv2.resize(CHAR_TEMPL, None, fx=SCALEFACTOR, fy=SCALEFACTOR)
+
 PLATFORM_TEMPL = cv2.imread(PLATFORM_TEMPL)
 PLATFORM_TEMPL = cv2.resize(PLATFORM_TEMPL, None, fx=SCALEFACTOR, fy=SCALEFACTOR)
 
+MOVING_PLATFORM_TEMPL = cv2.imread(MOVING_PLATFORM_TEMPL)
 # Draw captured game with recognized objects for debug purposes
 def draw_game(gameFrame, charLoc, platformLocs):
     bottom_right = (charLoc[0] + CHAR_TEMPL.shape[0], charLoc[1] + CHAR_TEMPL.shape[1])
@@ -45,14 +48,20 @@ def draw_game(gameFrame, charLoc, platformLocs):
 def update_locations(gameFrame):
     res_char = cv2.matchTemplate(gameFrame, CHAR_TEMPL, cv2.TM_SQDIFF_NORMED)
     res_platform = cv2.matchTemplate(gameFrame, PLATFORM_TEMPL, cv2.TM_SQDIFF_NORMED)
-    
+    res_moving_platform = cv2.matchTemplate(gameFrame, MOVING_PLATFORM_TEMPL, cv2.TM_SQDIFF_NORMED)
     # Get min and max matches
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res_char)
     
     # TM_SQDIFF_NORMED => best match is the minimum
     loc_char = min_loc
     loc_platform = np.array(np.where(res_platform <= 0.05))
-    
+    loc_moving_platform = np.array(np.where(res_moving_platform <= 0.05))
+
+    if(len(loc_moving_platform != 0)):
+        loc_platform[0] = np.append(loc_platform[0], loc_moving_platform[0])
+        loc_platform[1] = np.append(loc_platform[1], loc_moving_platform[1])
+
+
     return loc_char, loc_platform
 
 
@@ -60,7 +69,7 @@ def update(gameFrame, char, draw=True):
     start = time.time_ns()
     
     #print("FrameGrab: {} ms".format((tok-start)/1000000))
-
+    
     charLoc, platformLocs = update_locations(gameFrame)
 
     charLoc = np.array(charLoc)
@@ -72,9 +81,8 @@ def update(gameFrame, char, draw=True):
 
     highestReachable = (9999, 9999)
     
-    if len(platformLocs[0]) != 0:
+    if len(platformLocs) != 0:
         highestReachable = char.calculate_highest_under_flightpath(platformLocs)
-        print(highestReachable)
 
     if(highestReachable[0] != 9999):
         cv2.rectangle(gameFrame, highestReachable[::-1], 
